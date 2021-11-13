@@ -1,4 +1,10 @@
-## Snake game backend
-### Backend made to save snake game highscores
+# Snake game backend
+## Backend made to save snake game highscores
 
-Learning kotlin btw
+### Tools used:
+- Ktor for http server with routing
+- Ktorm as database ORM
+- MySQL database
+- Gson as json serializer
+- (TODO) Docker container
+- (TODO) Kubernetes deploy

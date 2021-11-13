@@ -50,16 +50,16 @@ fun Application.module() {
     }
     install(Routing) {
         get("/") {
-            var data: MutableList<Player> = ArrayList();
+            val data: MutableList<Player> = ArrayList()
             for (row in database.from(Players).select().limit(0, 10).orderBy(Players.points.desc())) {
-                data.add(Player(id=row[Players.id], username = row[Players.username], points= row[Players.points], saved_at = row[Players.saved_at].toString()))
+                data.add(Player(row[Players.id], row[Players.username], row[Players.points], row[Players.saved_at].toString()))
             }
             val jsonData = gsonSerializer.toJson(data)
             call.respondText(jsonData, ContentType.Application.Json, HttpStatusCode.OK)
         }
         post("/") {
-            val requestBody = call.receiveText();
-            val parsedRequestBody = gsonDeSerializer.fromJson<Player>(requestBody, Player::class.java);
+            val requestBody = call.receiveText()
+            val parsedRequestBody = gsonDeSerializer.fromJson(requestBody, Player::class.java)
             val jsonData = gsonSerializer.toJson(parsedRequestBody)
             call.respondText(jsonData, ContentType.Application.Json, HttpStatusCode.OK)
         }
