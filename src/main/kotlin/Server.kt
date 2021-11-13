@@ -28,6 +28,15 @@ object Players : Table<Nothing>("players") {
 
 data class Player(var id: Int?, var username: String?, var points: Int?, var saved_at: String?)
 
+fun playerIsValid(player:Player): Boolean {
+    var isInRange = false
+    val isNotNull: Boolean = !(player.points == null || player.username == null)
+    if (isNotNull) {
+        isInRange = !(player.points.toString().length > 30 || player.username!!.length > 16 || player.username!!.length < 3)
+    }
+    return isNotNull && isInRange
+}
+
 fun Application.module() {
 
     val database = Database.connect(
@@ -67,7 +76,7 @@ fun Application.module() {
                 val requestBody = call.receiveText()
                 val newPlayer = gsonDeSerializer.fromJson(requestBody, Player::class.java)
 
-                if (newPlayer.points == null || newPlayer.username == null) {
+                if (!playerIsValid(newPlayer)) {
                     throw Exception("user is invalid")
                 }
 
