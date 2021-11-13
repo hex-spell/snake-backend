@@ -16,6 +16,7 @@ import org.ktorm.schema.Table
 import org.ktorm.schema.datetime
 import org.ktorm.schema.int
 import org.ktorm.schema.varchar
+import kotlin.Exception
 
 
 object Players : Table<Nothing>("players") {
@@ -25,7 +26,7 @@ object Players : Table<Nothing>("players") {
     val saved_at = datetime("saved_at")
 }
 
-data class Player(val id: Int?,val username: String?,val points: Int?,val saved_at: String?)
+data class Player(var id: Int?, var username: String?, var points: Int?, var saved_at: String?)
 
 fun Application.module() {
 
@@ -50,18 +51,53 @@ fun Application.module() {
     }
     install(Routing) {
         get("/") {
-            val data: MutableList<Player> = ArrayList()
-            for (row in database.from(Players).select().limit(0, 10).orderBy(Players.points.desc())) {
-                data.add(Player(row[Players.id], row[Players.username], row[Players.points], row[Players.saved_at].toString()))
+            val data = database.from(Players).select().limit(0, 10).orderBy(Players.points.desc()).map { row ->
+                Player(
+                    row[Players.id],
+                    row[Players.username],
+                    row[Players.points],
+                    row[Players.saved_at].toString()
+                )
             }
             val jsonData = gsonSerializer.toJson(data)
             call.respondText(jsonData, ContentType.Application.Json, HttpStatusCode.OK)
         }
         post("/") {
-            val requestBody = call.receiveText()
-            val parsedRequestBody = gsonDeSerializer.fromJson(requestBody, Player::class.java)
-            val jsonData = gsonSerializer.toJson(parsedRequestBody)
-            call.respondText(jsonData, ContentType.Application.Json, HttpStatusCode.OK)
+            try {
+                val requestBody = call.receiveText()
+                val newPlayer = gsonDeSerializer.fromJson(requestBody, Player::class.java)
+
+                if (newPlayer.points == null || newPlayer.username == null) {
+                    throw Exception("user is invalid")
+                }
+
+                val id = database.insertAndGenerateKey(Players) {
+                    set(it.username, newPlayer.username)
+                    set(it.points, newPlayer.points)
+                }
+
+                if (id !is Int) {
+                    throw Exception("could not insert to database")
+                }
+
+                else {
+                    val insertedPlayer = database.from(Players).select().where { Players.id eq id }.map { row ->
+                        Player(
+                            row[Players.id],
+                            row[Players.username],
+                            row[Players.points],
+                            row[Players.saved_at].toString()
+                        )
+                    }[0];
+
+                    val jsonData = gsonSerializer.toJson(insertedPlayer)
+                    call.respondText(jsonData, ContentType.Application.Json, HttpStatusCode.OK)
+                }
+            }
+            catch (error: Exception) {
+                println(error)
+                call.respondText(error.message ?: "Unhandled error", status = HttpStatusCode.BadRequest)
+            }
         }
     }
 }
