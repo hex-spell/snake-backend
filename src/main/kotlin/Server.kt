@@ -16,6 +16,7 @@ import org.ktorm.schema.Table
 import org.ktorm.schema.datetime
 import org.ktorm.schema.int
 import org.ktorm.schema.varchar
+import redis.clients.jedis.Jedis
 
 
 object Players : Table<Nothing>("players") {
@@ -43,6 +44,8 @@ val env = mapOf(
     "DB_PORT" to (System.getenv("DB_PORT") ?: "3306"),
     "DB_USER" to (System.getenv("DB_USER") ?: "root"),
     "DB_PASSWORD" to (System.getenv("DB_PASSWORD") ?: "root"),
+    "REDIS_HOST" to (System.getenv("REDIS_HOST") ?: "localhost"),
+    "REDIS_PORT" to (System.getenv("REDIS_PORT") ?: "6379")
 )
 
 
@@ -57,6 +60,8 @@ fun Application.module() {
         user = env["DB_USER"],
         password = env["DB_PASSWORD"]
     )
+
+    val jedis = Jedis(env["REDIS_HOST"], env["REDIS_PORT"]!!.toInt())
 
     val builder = GsonBuilder()
 
@@ -73,16 +78,26 @@ fun Application.module() {
     }
     install(Routing) {
         get("/") {
-            val data = database.from(Players).select().limit(0, 10).orderBy(Players.points.desc()).map { row ->
-                Player(
-                    row[Players.id],
-                    row[Players.username],
-                    row[Players.points],
-                    row[Players.saved_at].toString()
-                )
+            val cachedScores = jedis.get("cached_scores");
+            var response = ""
+            if (cachedScores != null) {
+                response = cachedScores
             }
-            val jsonData = gsonSerializer.toJson(data)
-            call.respondText(jsonData, ContentType.Application.Json, HttpStatusCode.OK)
+            else {
+                val data = database.from(Players).select().limit(0, 10).orderBy(Players.points.desc()).map { row ->
+                    Player(
+                        row[Players.id],
+                        row[Players.username],
+                        row[Players.points],
+                        row[Players.saved_at].toString()
+                    )
+                }
+                val jsonData = gsonSerializer.toJson(data)
+                jedis.set("cached_scores", jsonData);
+                response = jsonData;
+            }
+
+            call.respondText(response, ContentType.Application.Json, HttpStatusCode.OK)
         }
         post("/") {
             try {
@@ -111,6 +126,10 @@ fun Application.module() {
                     }[0]
 
                     val jsonData = gsonSerializer.toJson(insertedPlayer)
+
+                    // clean cache
+                    jedis.del("cached_scores")
+
                     call.respondText(jsonData, ContentType.Application.Json, HttpStatusCode.OK)
                 }
             } catch (error: Exception) {

@@ -20,6 +20,7 @@ dependencies {
     implementation("org.ktorm:ktorm-support-mysql:3.2.0")
     implementation("io.ktor:ktor-serialization:1.6.4")
     implementation("com.google.code.gson:gson:2.8.9")
+    implementation("redis.clients:jedis:3.6.3")
     testImplementation(kotlin("test"))
     implementation("io.ktor:ktor-server-netty:1.6.0")
     implementation("io.ktor:ktor-html-builder:1.6.0")
