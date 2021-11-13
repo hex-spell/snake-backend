@@ -88,7 +88,7 @@ fun Application.module() {
                             row[Players.points],
                             row[Players.saved_at].toString()
                         )
-                    }[0];
+                    }[0]
 
                     val jsonData = gsonSerializer.toJson(insertedPlayer)
                     call.respondText(jsonData, ContentType.Application.Json, HttpStatusCode.OK)
