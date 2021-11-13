@@ -16,7 +16,6 @@ import org.ktorm.schema.Table
 import org.ktorm.schema.datetime
 import org.ktorm.schema.int
 import org.ktorm.schema.varchar
-import kotlin.Exception
 
 
 object Players : Table<Nothing>("players") {
@@ -28,21 +27,35 @@ object Players : Table<Nothing>("players") {
 
 data class Player(var id: Int?, var username: String?, var points: Int?, var saved_at: String?)
 
-fun playerIsValid(player:Player): Boolean {
+fun playerIsValid(player: Player): Boolean {
     var isInRange = false
     val isNotNull: Boolean = !(player.points == null || player.username == null)
     if (isNotNull) {
-        isInRange = !(player.points.toString().length > 30 || player.username!!.length > 16 || player.username!!.length < 3)
+        isInRange =
+            !(player.points.toString().length > 30 || player.username!!.length > 16 || player.username!!.length < 3)
     }
     return isNotNull && isInRange
 }
 
+val env = mapOf(
+    "DB_HOST" to (System.getenv("DB_HOST") ?: "localhost"),
+    "DB_NAME" to (System.getenv("DB_NAME") ?: "snake"),
+    "DB_PORT" to (System.getenv("DB_PORT") ?: "3306"),
+    "DB_USER" to (System.getenv("DB_USER") ?: "root"),
+    "DB_PASSWORD" to (System.getenv("DB_PASSWORD") ?: "root"),
+)
+
+
 fun Application.module() {
 
+    for ((key, value) in env) {
+        println("$key : $value")
+    }
+
     val database = Database.connect(
-        url = "jdbc:mysql://localhost:3306/snake",
-        user = "root",
-        password = "root"
+        url = "jdbc:mysql://${env["DB_HOST"]}:${env["DB_PORT"]}/${env["DB_NAME"]}",
+        user = env["DB_USER"],
+        password = env["DB_PASSWORD"]
     )
 
     val builder = GsonBuilder()
@@ -87,9 +100,7 @@ fun Application.module() {
 
                 if (id !is Int) {
                     throw Exception("could not insert to database")
-                }
-
-                else {
+                } else {
                     val insertedPlayer = database.from(Players).select().where { Players.id eq id }.map { row ->
                         Player(
                             row[Players.id],
@@ -102,8 +113,7 @@ fun Application.module() {
                     val jsonData = gsonSerializer.toJson(insertedPlayer)
                     call.respondText(jsonData, ContentType.Application.Json, HttpStatusCode.OK)
                 }
-            }
-            catch (error: Exception) {
+            } catch (error: Exception) {
                 println(error)
                 call.respondText(error.message ?: "Unhandled error", status = HttpStatusCode.BadRequest)
             }
