@@ -36,11 +36,6 @@ ___
 
 ___
 
-### Additional features
-- Rate limiting by IP
-- cache
-- validation
-
 ### Environment variables (name, default value):
 - **DB_HOST**: `localhost`
 - **DB_NAME**: `snake`
@@ -49,6 +44,13 @@ ___
 - **DB_PASSWORD**: `root`
 - **REDIS_HOST**: `localhost`
 - **REDIS_PORT**: `6379`
+
+---
+
+### Additional features
+- Rate limiting by IP
+- cache
+- validation
 
 ### Tools used:
 - Ktor for http server with routing
