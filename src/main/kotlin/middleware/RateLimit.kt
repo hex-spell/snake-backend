@@ -32,7 +32,6 @@ class RateLimit(configuration: Configuration) {
                 context.call.respondText("too many requests", status = HttpStatusCode.Forbidden)
             }
         }
-        context.proceed()
     }
 
     // Implements ApplicationFeature as a companion object.

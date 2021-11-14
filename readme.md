@@ -1,8 +1,39 @@
-# Snake game backend
+# Snake game high-scores
+Learning Kotlin applications for backend
 
-### What it does
+## What it does
 - Saves user high-scores
 - Retrieves the best 10 of all time
+
+___
+
+## Endpoints
+###**GET /**
+- Returns array of `
+  {
+  "id": Int,
+  "username": String,
+  "points": Int,
+  "saved_at": String
+  }
+`
+###**POST /**
+- Receives `
+  {
+  "username": String,
+  "points": Int,
+  }
+  `
+- Returns new entity as `
+  {
+  "id": Int,
+  "username": String,
+  "points": Int,
+  "saved_at": String
+  }
+  `
+
+___
 
 ### Additional features
 - Rate limiting by IP
