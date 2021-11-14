@@ -22,7 +22,7 @@ ___
 - Receives `
   {
   "username": String,
-  "points": Int,
+  "points": Int
   }
   `
 - Returns new entity as `
