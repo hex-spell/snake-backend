@@ -8,7 +8,7 @@ Learning Kotlin applications for backend
 ___
 
 ## Endpoints
-###**GET /**
+### GET /
 - Returns array of `
   {
   "id": Int,
@@ -18,7 +18,7 @@ ___
   }
 `
 
-###**POST /**
+### POST /
 - Receives `
   {
   "username": String,
