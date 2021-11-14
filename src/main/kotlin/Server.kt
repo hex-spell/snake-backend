@@ -38,6 +38,21 @@ fun playerIsValid(player: Player): Boolean {
     return isNotNull && isInRange
 }
 
+
+// idea from here: https://engineering.classdojo.com/blog/2015/02/06/rolling-rate-limiter/
+suspend fun rateLimiter(call: ApplicationCall, jedis: Jedis) {
+    val userIp = call.request.origin.remoteHost
+    val interval = 60000
+    jedis.zremrangeByScore(userIp, 0.0, System.currentTimeMillis().toDouble()-interval)
+    jedis.zadd(userIp, System.currentTimeMillis().toDouble(), System.currentTimeMillis().toString())
+    jedis.expire(userIp, interval.toLong())
+    val userUsageTokens = jedis.zrange(userIp, 0, -1)
+    if (userUsageTokens.size > 10) {
+        call.respondText("too many requests", status = HttpStatusCode.Forbidden)
+    }
+    print(userUsageTokens.size)
+}
+
 val env = mapOf(
     "DB_HOST" to (System.getenv("DB_HOST") ?: "localhost"),
     "DB_NAME" to (System.getenv("DB_NAME") ?: "snake"),
@@ -78,6 +93,7 @@ fun Application.module() {
     }
     install(Routing) {
         get("/") {
+            rateLimiter(call, jedis)
             val cachedScores = jedis.get("cached_scores");
             var response = ""
             if (cachedScores != null) {
@@ -100,6 +116,7 @@ fun Application.module() {
             call.respondText(response, ContentType.Application.Json, HttpStatusCode.OK)
         }
         post("/") {
+            rateLimiter(call, jedis)
             try {
                 val requestBody = call.receiveText()
                 val newPlayer = gsonDeSerializer.fromJson(requestBody, Player::class.java)
