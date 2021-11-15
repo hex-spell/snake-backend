@@ -69,7 +69,6 @@ fun Application.module() {
 
     install(Routing) {
         get("/") {
-            println("hello!")
             val cachedScores = jedisInstance.get("cached_scores")
             val response = if (cachedScores != null) {
                 cachedScores
@@ -82,12 +81,7 @@ fun Application.module() {
 
             call.respondText(response, ContentType.Application.Json, HttpStatusCode.OK)
         }
-        get("/snake-backend") {
-            print("asdasd")
-            call.respondText("response", ContentType.Application.Json, HttpStatusCode.OK)
-        }
         post("/") {
-            println("hello!")
             try {
                 val requestBody = call.receiveText()
                 val newPlayer = gsonDeSerializer.fromJson(requestBody, PlayerEntity.DTO::class.java)
