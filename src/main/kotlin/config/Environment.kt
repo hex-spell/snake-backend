@@ -1,6 +1,7 @@
 package config
 
 class Environment {
+    val host = System.getenv("HOST") ?: "localhost"
     val dbHost = System.getenv("DB_HOST") ?: "localhost"
     val dbName = System.getenv("DB_NAME") ?: "snake"
     val dbPort = System.getenv("DB_PORT")?.toInt() ?: 3306

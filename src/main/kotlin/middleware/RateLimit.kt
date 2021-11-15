@@ -21,6 +21,7 @@ class RateLimit(configuration: Configuration) {
     }
 
     suspend fun intercept(context: PipelineContext<Unit, ApplicationCall>) {
+        print("interception")
         if (jedis is Jedis){
             val userIp = context.call.request.origin.remoteHost
             jedis.zremrangeByScore(userIp, 0.0, System.currentTimeMillis().toDouble()-interval)

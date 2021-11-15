@@ -19,16 +19,16 @@ import redis.clients.jedis.Jedis
 import repositories.PlayerRepository
 import kotlin.reflect.full.memberProperties
 
+val env = Environment()
 
 fun Application.module() {
-    val env = Environment()
 
     for (prop in Environment::class.memberProperties) {
         println("${prop.name} : ${prop.get(env)}")
     }
 
     val database = Database.connect(
-        url = "jdbc:mysql://${env.dbHost}:${env.dbPort}/${env.dbName}",
+        url = "jdbc:mysql://${env.dbHost}:${env.dbPort}/${env.dbName}?useSSL=false",
         user = env.dbUser,
         password = env.dbPassword
     )
@@ -69,6 +69,7 @@ fun Application.module() {
 
     install(Routing) {
         get("/") {
+            println("hello!")
             val cachedScores = jedisInstance.get("cached_scores")
             val response = if (cachedScores != null) {
                 cachedScores
@@ -81,7 +82,12 @@ fun Application.module() {
 
             call.respondText(response, ContentType.Application.Json, HttpStatusCode.OK)
         }
+        get("/snake-backend") {
+            print("asdasd")
+            call.respondText("response", ContentType.Application.Json, HttpStatusCode.OK)
+        }
         post("/") {
+            println("hello!")
             try {
                 val requestBody = call.receiveText()
                 val newPlayer = gsonDeSerializer.fromJson(requestBody, PlayerEntity.DTO::class.java)
@@ -109,5 +115,5 @@ fun Application.module() {
 }
 
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "127.0.0.1", module = Application::module).start(wait = true)
+    embeddedServer(Netty, port = 80, host = env.host, module = Application::module).start(wait = true)
 }
