@@ -100,7 +100,7 @@ services:
         DB_NAME: "snake"
         DB_PORT: "3306"
         DB_USER: "root"
-        DB_PASSWORD: "agustin"
+        DB_PASSWORD: #shh
         REDIS_HOST: redis
         REDIS_PORT: "6379"
       restart: always
